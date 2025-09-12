@@ -101,7 +101,7 @@ def print_summary(results: List[Result]) -> None:
 
 def main(argv: List[str]) -> int:
     if not argv:
-        print("Uso: python password_validator.py data_passwords.txt [--summary] [--export=salida.csv]")
+        print("Uso: python password_validator.py data_passwords.txt [--summary] ")
         return 2
     path = None
     summary = False
@@ -120,8 +120,6 @@ def main(argv: List[str]) -> int:
     print_table(results)
     if summary:
         print_summary(results)
-    if export:
-        export_csv(results, export)
     return 0
 
 if __name__ == "__main__":
