@@ -16,7 +16,7 @@ PASSWORD: <contraseña>s
 Uso:
   python password_validator.py data_passwords.txt --summary 
 """
-import sys, re, csv
+import sys, re
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
