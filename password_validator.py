@@ -3,6 +3,9 @@
 """
 password_validator.py
 
+PROBLEMA: Validar contraseñas según política de seguridad específica
+SOLUCIÓN: Usar regex con lookaheads + validaciones paso a paso
+
 Política de contraseña:
 - Longitud mínima: 10
 - ≥ 3 mayúsculas [A-Z]
@@ -20,7 +23,7 @@ import sys, re
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-# Expresión regular global (coincidencia completa)
+# Regex principal: usa lookaheads (?=...) para verificar múltiples condiciones simultáneamente
 PASSWORD_REGEX_TEXT = (
     r'^(?=([A-Za-z0-9#$%!@+=]{10,})$)'  # longitud mínima y charset permitido
     r'(?=(?:.*[A-Z]){3})'               # ≥ 3 mayúsculas
@@ -31,12 +34,14 @@ PASSWORD_REGEX = re.compile(PASSWORD_REGEX_TEXT)
 
 @dataclass
 class Result:
+    """Almacena resultado de validación: línea, contraseña, estado y mensaje"""
     line_no: int
     password: str
     valid: bool
     message: str
 
 def parse_line(line: str) -> Optional[str]:
+    """Extrae contraseña de línea: soporta formato 'PASSWORD: xxx' o solo 'xxx'"""
     line = line.strip()
     if not line or line.startswith("#"):
         return None
@@ -46,6 +51,10 @@ def parse_line(line: str) -> Optional[str]:
     return line  # tolerante: si no ponen "PASSWORD:", igual toma la cadena
 
 def validate_password(pw: str) -> Tuple[bool, str]:
+    """
+    Validación en 2 etapas: 1) Chequeos específicos con mensajes detallados
+                           2) Validación global con regex para consistencia
+    """
     if not isinstance(pw, str):
         return False, "Cadena inválida"
 
@@ -66,6 +75,7 @@ def validate_password(pw: str) -> Tuple[bool, str]:
     return (True, "OK") if ok else (False, "No cumple la política")
 
 def load_and_validate(path: str) -> List[Result]:
+    """Carga archivo línea por línea y valida cada contraseña encontrada"""
     out: List[Result] = []
     with open(path, "r", encoding="utf-8") as f:
         for i, raw in enumerate(f, start=1):
@@ -77,6 +87,7 @@ def load_and_validate(path: str) -> List[Result]:
     return out
 
 def print_table(results: List[Result]) -> None:
+    """Presenta resultados en tabla responsive que se adapta al ancho del terminal"""
     from shutil import get_terminal_size
     width = get_terminal_size((120, 20)).columns
     print("-" * width)
@@ -88,6 +99,7 @@ def print_table(results: List[Result]) -> None:
     print("-" * width)
 
 def print_summary(results: List[Result]) -> None:
+    """Calcula y muestra estadísticas: total procesadas y porcentaje de validez"""
     total = len(results)
     ok = sum(1 for r in results if r.valid)
     print("\nResumen:")
@@ -100,6 +112,7 @@ def print_summary(results: List[Result]) -> None:
 
 
 def main(argv: List[str]) -> int:
+    """Función principal: parsea argumentos, coordina validación y muestra resultados"""
     if not argv:
         print("Uso: python password_validator.py data_passwords.txt [--summary] ")
         return 2
